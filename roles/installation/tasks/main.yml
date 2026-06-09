@@ -306,6 +306,7 @@
   debug:
     msg: "stdout: '{{ redis_cluster_exists.stdout }}'"
   run_once: true
+  tags: init_cluster
 
 - name: Debug cluster exists stdout
   debug:
