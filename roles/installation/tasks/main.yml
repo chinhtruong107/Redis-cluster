@@ -208,6 +208,7 @@
   systemd:
     name: redis-server
     enabled: true
+  failed_when: false
 
 - name: Restart Redis service
   systemd:
