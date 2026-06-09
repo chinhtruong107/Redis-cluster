@@ -29,8 +29,8 @@ Redis-Cluster/
 ├── playbooks/
 │   └── playbook.yml
 ├── roles/
-│   ├── common/                 # Common host configuration
-│   └── installation/           # Redis installation and configuration
+│   ├── common/
+│   └── installation/
 ├── templates/
 │   ├── disable-thp.service.j2
 │   ├── 99-redis.conf.j2
@@ -73,7 +73,7 @@ Edit `group_vars/redis-cluster.yml`:
 ```yaml
 # SSH
 ansible_user: ubuntu
-ansible_ssh_private_key_file: /home/ubuntu/.ssh/redis-cluster.pem
+ansible_ssh_private_key_file: <PRIVATE_KEY_PATH>
 
 # Redis
 redis_client_port: 6379
@@ -84,19 +84,19 @@ redis_maxmemory: 512mb
 
 # Replication
 redis_master_user: repl
-redis_master_password: RedisRepl@2026
+redis_master_password: <REPLICATION_PASSWORD>
 ```
 
 Edit `inventory/inventory.ini`:
 
 ```ini
 [redis]
-redis-01 ansible_host=172.31.27.194
-redis-02 ansible_host=172.31.21.147
-redis-03 ansible_host=172.31.30.70
-redis-04 ansible_host=172.31.24.51
-redis-05 ansible_host=172.31.23.131
-redis-06 ansible_host=172.31.16.78
+redis-01 ansible_host=10.0.1.11
+redis-02 ansible_host=10.0.1.12
+redis-03 ansible_host=10.0.1.13
+redis-04 ansible_host=10.0.1.14
+redis-05 ansible_host=10.0.1.15
+redis-06 ansible_host=10.0.1.16
 ```
 
 ---
@@ -146,7 +146,7 @@ net.ipv4.tcp_max_syn_backlog = 65535
 ansible redis -i inventory/inventory.ini -m ping
 ```
 
-Expected:
+Expected output:
 
 ```text
 SUCCESS => pong
@@ -225,12 +225,12 @@ Run from any node:
 
 ```bash
 redis-cli --cluster create \
-172.31.27.194:6379 \
-172.31.21.147:6379 \
-172.31.30.70:6379 \
-172.31.24.51:6379 \
-172.31.23.131:6379 \
-172.31.16.78:6379 \
+10.0.1.11:6379 \
+10.0.1.12:6379 \
+10.0.1.13:6379 \
+10.0.1.14:6379 \
+10.0.1.15:6379 \
+10.0.1.16:6379 \
 --cluster-replicas 1
 ```
 
@@ -253,7 +253,7 @@ yes
 ### Cluster Status
 
 ```bash
-redis-cli -c -h 172.31.27.194 cluster info
+redis-cli -c -h 10.0.1.11 cluster info
 ```
 
 Expected:
@@ -266,13 +266,13 @@ cluster_slots_assigned:16384
 ### Cluster Nodes
 
 ```bash
-redis-cli -c -h 172.31.27.194 cluster nodes
+redis-cli -c -h 10.0.1.11 cluster nodes
 ```
 
 Expected node format:
 
 ```text
-172.31.x.x:6379@16379
+10.0.1.x:6379@16379
 ```
 
 ---
@@ -282,7 +282,7 @@ Expected node format:
 ### Read / Write Test
 
 ```bash
-redis-cli -c -h 172.31.27.194
+redis-cli -c -h 10.0.1.11
 ```
 
 ```redis
@@ -339,7 +339,7 @@ systemctl stop redis-server
 Verify cluster:
 
 ```bash
-redis-cli -c -h 172.31.21.147 cluster nodes
+redis-cli -c -h 10.0.1.12 cluster nodes
 ```
 
 Expected:
@@ -367,15 +367,15 @@ Expected:
 
 ```bash
 redis-cli --cluster add-node \
-172.31.0.104:6379 \
-172.31.27.194:6379
+10.0.1.20:6379 \
+10.0.1.11:6379
 ```
 
 Rebalance slots:
 
 ```bash
 redis-cli --cluster rebalance \
-172.31.27.194:6379 \
+10.0.1.11:6379 \
 --cluster-use-empty-masters
 ```
 
@@ -383,8 +383,8 @@ redis-cli --cluster rebalance \
 
 ```bash
 redis-cli --cluster add-node \
-172.31.0.110:6379 \
-172.31.27.194:6379 \
+10.0.1.21:6379 \
+10.0.1.11:6379 \
 --cluster-slave \
 --cluster-master-id <MASTER_ID>
 ```
@@ -443,3 +443,9 @@ Expected:
 ```text
 Max open files 100000 100000 files
 ```
+
+---
+
+## License
+
+MIT License
