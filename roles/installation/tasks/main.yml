@@ -412,7 +412,7 @@
   delegate_to: "{{ groups['redis'][1] }}"
   run_once: true
   register: redis_cluster_nodes_after_rejoin
-  changed_changed: false
+  changed_when: false
 
 - name: Display result
   debug:
