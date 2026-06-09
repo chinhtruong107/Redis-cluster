@@ -144,17 +144,11 @@
     group: redis
     recurse: true
 
-- name: Create write test file as redis user
-  file:
-    path: /data/redis/{{ redis_client_port }}/.rw-test
-    state: touch
-  become: true
-  become_user: redis
-
-- name: Remove write test file
-  file:
-    path: /data/redis/{{ redis_client_port }}/.rw-test
-    state: absent
+- name: Test Redis write permission
+  shell: |
+    sudo -u redis touch /data/redis/{{ redis_client_port }}/.rw-test
+    rm -f /data/redis/{{ redis_client_port }}/.rw-test
+  changed_when: false
 
 - name: Backup redis.conf
   command: cp /etc/redis/redis.conf /etc/redis/redis.conf.bak
