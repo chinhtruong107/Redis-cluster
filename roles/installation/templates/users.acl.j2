@@ -1,0 +1,4 @@
+user default off
+user admin on >{{ redis_admin_password }} ~* &* +@all
+user app on >{{ redis_app_password }} ~* &* +@read +@write -@admin -@dangerous
+user repl on >{{ redis_repl_password }} ~* &* +psync +replconf +ping

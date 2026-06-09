@@ -1,0 +1,4 @@
+[Service]
+LimitNOFILE=100000
+ProtectSystem=off
+ReadWritePaths=/data /data/redis /data/redis/{{ redis_client_port }}

@@ -63,10 +63,7 @@
     dest: "/etc/systemd/system/disable-thp.service"
     owner: root
     group: root
-
-- name: Reload daemon service
-  systemd:
-    daemon_reload: yes
+  notify: reload systemd
 
 - name: Enable and start disable-thp service
   systemd:
@@ -153,7 +150,7 @@
 - name: Backup redis.conf
   command: cp /etc/redis/redis.conf /etc/redis/redis.conf.bak
 
-- name: Deploy redis.conf
+- name: Config redis.conf
   template:
     src: redis.conf.j2
     dest: /etc/redis/redis.conf
@@ -161,3 +158,76 @@
     group: root
     mode: '0644'
     backup: true
+
+- name: Create ACL file
+  template:
+    src: users.acl.j2
+    dest: /etc/redis/users.acl
+    owner: redis
+    group: redis
+    mode: '0640'
+    backup: true
+
+- name: Create systemd override directory for Redis
+  file:
+    path: /etc/systemd/system/redis-server.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create override.conf
+  template:
+    src: override.conf.j2
+    dest: /etc/systemd/system/redis-server.service.d/override.conf
+    backup: true
+  notify: reload systemd
+
+- name: Ensure Redis data directory ownership
+  file:
+    path: /data/redis
+    state: directory
+    owner: redis
+    group: redis
+    recurse: yes
+
+- name: Enable Redis service
+  systemd:
+    name: redis-server
+    enabled: true
+
+- name: Restart Redis service
+  systemd:
+    name: redis-server
+    state: restarted
+
+- name: Status Redis service
+  command: systemctl status redis-server
+  register: redis_status
+  changed_when: false
+  failed_when: false
+
+- name: Display Redis status
+  debug:
+    msg: "{{ redis_status.stdout }}"
+
+- name: Check port redis
+  command: ss -ltnp | grep -E '{{ redis_client_port }}|{{ redis_cluster_port }}'
+  register: redis_port
+  changed_when: false
+  failed_when: false
+
+- name: Display port redis
+  debug:
+    msg: "{{ redis_port.stdout }}"
+
+- name: Check and confirm connect to redis from user admin
+  command: redis-cli --user admin -a '{{ redis_admin_password }}' ping
+  register: redis_ping_admin
+  changed_when: false
+  failed_when: false
+
+- name: Display result
+  debug:
+    msg: "{{ redis_ping_admin.stdout }}"
+
