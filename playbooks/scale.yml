@@ -1,5 +1,14 @@
 ---
-- name: Add node redis-07
+- name: Provision new node
+  hosts: redis_new
+  become: true
+  vars_files:
+    - ../group_vars/redis-cluster.yml
+  roles:
+    - common
+    - installation
+
+- name: Scale Redis cluster
   hosts: redis_new
   become: true
   vars_files:
