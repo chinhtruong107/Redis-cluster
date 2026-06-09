@@ -110,6 +110,7 @@
   command: findmnt /data
   register: data_mount
   changed_when: false
+  failed_when: false
 
 - name: Display /data mount
   debug:
