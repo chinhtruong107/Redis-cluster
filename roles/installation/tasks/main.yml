@@ -213,6 +213,7 @@
   systemd:
     name: redis-server
     state: started
+  failed_when: false
 
 - name: Status Redis service
   command: systemctl status redis-server
