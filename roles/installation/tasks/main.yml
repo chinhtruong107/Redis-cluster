@@ -300,6 +300,11 @@
 
 - name: Debug cluster exists stdout
   debug:
+    msg: "stdout: '{{ redis_cluster_exists.stdout }}'"
+  run_once: true
+
+- name: Debug cluster exists stdout
+  debug:
     msg: "{{ redis_cluster_exists.stdout }}"
   run_once: true
 
