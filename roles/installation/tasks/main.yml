@@ -208,7 +208,7 @@
 - name: Restart Redis service
   systemd:
     name: redis-server
-    state: restarted
+    state: started
 
 - name: Status Redis service
   command: systemctl status redis-server
