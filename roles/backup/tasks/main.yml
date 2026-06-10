@@ -1,0 +1,43 @@
+---
+- name: Create backup directory
+  file:
+    path: /data/backup/redis
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Flush AOF
+  command: redis-cli --user admin -a '{{ redis_admin_password }}' bgrewriteaof
+  changed_when: false
+
+- name: Wait AOF rewrite complete
+  shell: redis-cli --user admin -a '{{ redis_admin_password }}' info persistence | grep aof_rewrite_in_progress
+  register: aof_status
+  until: "'aof_rewrite_in_progress:0' in aof_status.stdout"
+  retries: 10
+  delay: 3
+  changed_when: false
+
+- name: Copy AOF directory to backup
+  command: cp -r /data/redis/{{ redis_client_port }}/appendonlydir /data/backup/redis/appendonlydir_{{ ansible_date_time.epoch }}
+
+- name: Copy RDB file to backup
+  command: cp /data/redis/{{ redis_client_port }}/dump.rdb /data/backup/redis/dump_{{ ansible_date_time.epoch }}.rdb
+
+- name: Compress backup files
+  shell: >
+    tar -czf /data/backup/redis/backup_{{ inventory_hostname }}_{{ ansible_date_time.epoch }}.tar.gz
+    -C /data/backup/redis
+    appendonlydir_{{ ansible_date_time.epoch }}
+    dump_{{ ansible_date_time.epoch }}.rdb
+  changed_when: false
+
+- name: Check backup files
+  command: ls -lh /data/backup/redis
+  register: redis_backup
+  changed_when: false
+
+- name: Display backup files
+  debug:
+    msg: "{{ redis_backup.stdout }}"
