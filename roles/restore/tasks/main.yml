@@ -27,11 +27,11 @@
   changed_when: false
 
 - name: Copy RDB
-  shell: cp /tmp/redis-restore/dump_{{ backup_timestamp }}.rdb /data/redis/{{ redis_client_port }}/dump.rdb
+  shell: cp $(ls /tmp/redis-restore/dump_*.rdb | tail -1) /data/redis/{{ redis_client_port }}/dump.rdb
   changed_when: false
 
 - name: Copy data directory
-  shell: cp -r /tmp/redis-restore/appendonlydir_{{ backup_timestamp }}/* /data/redis/{{ redis_client_port }}/appendonlydir/
+  shell: cp -r $(ls -d /tmp/redis-restore/appendonlydir_*)/. /data/redis/{{ redis_client_port }}/appendonlydir/
   changed_when: false
 
 - name: Set ownership for Redis data directory
