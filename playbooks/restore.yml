@@ -1,0 +1,8 @@
+---
+- name: Restore Redis Cluster
+  hosts: redis
+  become: true
+  vars_files:
+    - ../group_vars/redis-cluster.yml
+  roles:
+    - restore

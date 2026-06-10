@@ -1,0 +1,66 @@
+---
+- name: Stop Redis service
+  systemd:
+    name: redis-server
+    state: stopped
+
+- name: Delete existing data directory
+  shell: rm -rf /data/redis/{{ redis_client_port }}/appendonlydir/*
+  changed_when: false
+
+- name: Delete existing RDB
+  shell: rm -rf /data/redis/{{ redis_client_port }}/dump.rdb
+  changed_when: false
+
+- name: Delete existing nodes-6379.conf
+  file:
+    path: "/data/redis/{{ redis_client_port }}/nodes-6379.conf"
+    state: absent
+
+- name: Create restore temp directory
+  file:
+    path: /tmp/redis-restore
+    state: directory
+
+- name: Unzip backup file
+  command: tar -xzf /data/backup/redis/{{ backup_file }} -C /tmp/redis-restore
+
+- name: Copy data directory
+  shell: cp -r /tmp/redis-restore/appendonlydir/* /data/redis/{{ redis_client_port }}/appendonlydir/
+  changed_when: false
+
+- name: Copy RDB
+  shell: cp /tmp/redis-restore/dump_*.rdb /data/redis/{{ redis_client_port }}/dump.rdb
+  changed_when: false
+
+- name: Set ownership for Redis data directory
+  file:
+    path: /data/redis/{{ redis_client_port }}
+    owner: redis
+    group: redis
+    recurse: yes
+
+- name: Start Redis service
+  systemd:
+    name: redis-server
+    state: started
+
+- name: Check and confirm connect to redis from user admin
+  command: redis-cli --user admin -a '{{ redis_admin_password }}' ping
+  register: redis_ping_admin
+  changed_when: false
+  failed_when: false
+
+- name: Display result
+  debug:
+    msg: "{{ redis_ping_admin.stdout }}"
+
+- name: Check replication info
+  command: redis-cli --user admin -a '{{ redis_admin_password }}' info replication
+  register: redis_replication
+  changed_when: false
+  failed_when: false
+
+- name: Display result
+  debug:
+    msg: "{{ redis_replication.stdout }}"
